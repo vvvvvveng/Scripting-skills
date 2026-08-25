@@ -40,7 +40,7 @@ metadata:
 ```
 
 > ℹ️ **自动适配机制**：`backup_tool.py` 启动时会从环境变量 `TMPDIR` 自动推导当前设备的沙盒路径（`TMPDIR` = `<沙盒>/tmp/`，去掉 `/tmp` 后拼 `Documents/ScriptBackups`）。不同设备/用户的沙盒 UUID 不同，但都能自动找到各自的备份目录，**无需手改路径**。
-> 若 `TMPDIR` 不可用（如手动在电脑上跑脚本），则回退到内置的当前设备路径；再不行回退到 iCloud 路径（`destination: "icloud"` 时的历史位置：`/var/mobile/Library/Mobile Documents/iCloud~com~thomfang~Scripting/Documents/ScriptBackups/`）。
+> 若 `TMPDIR` 不可用（如手动在电脑上跑脚本），工具会继续扫描 `~/Library/Mobile Documents/iCloud~*~Scripting/` 容器，自动找到 `destination: "icloud"` 时的历史位置；探测不到时把候选路径打印出来供排查。
 > 当前用户配置是 `destination: "iphone"`，备份在沙盒路径。
 
 查找历史版本时**优先**看这个目录，不要自行去别处找。
@@ -57,10 +57,10 @@ metadata:
 
 ## 当前脚本位置
 
-正在编辑的脚本在：
+正在编辑的脚本在（Scripting 的 iCloud 脚本目录，路径随用户不同）：
 
 ```
-/var/mobile/Library/Mobile Documents/iCloud~com~thomfang~Scripting/Documents/scripts/脚本名/
+<iCloud Documents>/scripts/脚本名/
 ```
 
 备份 zip 内 `脚本名/` 下的文件与当前 `scripts/脚本名/` 下的文件一一对应，可逐文件对比。
