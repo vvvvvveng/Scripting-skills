@@ -56,12 +56,28 @@ def _default_tmp_dir():
     return os.environ.get("TMPDIR") or "/tmp"
 
 
-# 主目录（自动探测，不同设备/用户自动适配；探测不到才回退 iCloud 历史位置）
-BACKUPS_DIR = _detect_sandbox_backups_dir() or (
-    "/var/mobile/Library/Mobile Documents/iCloud~com~thomfang~Scripting/Documents/ScriptBackups"
-)
-# 备用（destination 为 icloud 时的历史位置；主目录不存在时回退）
-BACKUPS_DIR_FALLBACK = "/var/mobile/Library/Mobile Documents/iCloud~com~thomfang~Scripting/Documents/ScriptBackups"
+def _detect_icloud_backups_dir():
+    """从 iCloud Mobile Documents 容器自动推导 ScriptBackups（destination 为 icloud 时）。
+    扫描 ~/Library/Mobile Documents 下 iCloud~*~Scripting 容器，不写死任何账户名。"""
+    mobile_docs = os.path.join(os.path.expanduser("~"), "Library", "Mobile Documents")
+    try:
+        for name in os.listdir(mobile_docs):
+            if name.startswith("iCloud~") and name.endswith("~Scripting"):
+                cand = os.path.join(mobile_docs, name, "Documents", "ScriptBackups")
+                if os.path.isdir(cand):
+                    return cand
+    except OSError:
+        pass
+    return None
+
+
+# 主目录（自动探测，不同设备/用户自动适配）
+BACKUPS_DIR = _detect_sandbox_backups_dir()
+# 备用（destination 为 icloud 时的历史位置；同样动态探测）
+BACKUPS_DIR_FALLBACK = _detect_icloud_backups_dir()
+# 都探测不到时的兜底：主目录回退到沙盒路径，备用回退到 iCloud 根（用于报错提示）
+if not BACKUPS_DIR and not BACKUPS_DIR_FALLBACK:
+    BACKUPS_DIR = os.path.join(os.path.expanduser("~"), "Library", "Mobile Documents")
 GITHUB_REPO = "vvvvvveng/Scripting-releases"
 TMP_DIR = _default_tmp_dir()
 VERSION_RE = re.compile(r"^(.*)_(\d+\.\d+\.\d+)\.scripting$")
@@ -86,11 +102,10 @@ def split_backup_name(fname):
 
 def resolve_backups_dir():
     """返回实际存在的备份目录（优先 iPhone 本地沙盒，回退 iCloud）。"""
-    if os.path.isdir(BACKUPS_DIR):
-        return BACKUPS_DIR
-    if os.path.isdir(BACKUPS_DIR_FALLBACK):
-        return BACKUPS_DIR_FALLBACK
-    return BACKUPS_DIR
+    for d in (BACKUPS_DIR, BACKUPS_DIR_FALLBACK):
+        if d and os.path.isdir(d):
+            return d
+    return BACKUPS_DIR or BACKUPS_DIR_FALLBACK or ""
 
 
 def list_backups(script_filter=None):
