@@ -41,10 +41,9 @@ function main() {
   // 可选：要获取的字段 key（如 token、password、account）
   const key = (params.key ?? "").toString().trim().toLowerCase() || undefined
 
-  // 构建存储路径
+  // 构建存储路径（App Group 专属目录，持久，不会被 Agent 会话机制清理）
   const credentialsPath =
-    FileManager.appGroupDocumentsDirectory +
-    "/scripting-agent/workspace/default/credentials.json"
+    FileManager.appGroupDocumentsDirectory + "/🐝密码管理器/credentials.json"
 
   // 检查文件是否存在
   if (!FileManager.existsSync(credentialsPath)) {
