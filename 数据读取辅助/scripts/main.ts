@@ -46,6 +46,12 @@ function main() {
   // 可选：要获取的字段 key（如 token、password、account）
   const key = (params.key ?? "").toString().trim().toLowerCase() || undefined
 
+  // 可选：是否确认读取敏感字段（secure 字段）的明文。默认 false —— 敏感字段只返回打码值。
+  const confirmSensitive =
+    params.confirm === true ||
+    String(params.confirm).toLowerCase() === "true" ||
+    String(params.confirm) === "1"
+
   // 构建存储路径（App Group 专属目录，持久，不会被 Agent 会话机制清理）
   const credentialsPath =
     FileManager.appGroupDocumentsDirectory + "/🐝密码管理器/credentials.json"
@@ -118,6 +124,20 @@ function main() {
     for (const account of accounts) {
       for (const field of account.fields) {
         if (field.key && field.key.toLowerCase() === key && field.value) {
+          // 敏感字段（secure）默认打码：只有显式传 confirm: true 才返回明文
+          if (field.secure && !confirmSensitive) {
+            Script.exit({
+              success: true,
+              service: service,
+              key: key,
+              found: false,
+              requiresConfirm: true,
+              value: "*** (敏感字段已隐藏)",
+              accountId: account.id,
+              hint: `字段「${key}」是敏感字段（secure），默认不返回明文。如确需读取，请重新调用并显式传入 confirm: true。`,
+            })
+            return
+          }
           Script.exit({
             success: true,
             service: service,
