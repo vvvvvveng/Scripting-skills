@@ -21,6 +21,11 @@ interface CredentialsFile {
   services: Record<string, Account[]>
   security?: unknown
   templates?: unknown
+  viewMode?: "grouped" | "independent"
+  showGuide?: boolean
+  autoBackupEnabled?: boolean
+  autoBackupPassword?: string
+  autoBackupAt?: string
 }
 
 // ---------- 主逻辑 ----------
