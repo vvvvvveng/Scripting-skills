@@ -70,9 +70,11 @@ scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"service":"gith
 |------|------|------|
 | `service` | 是 | 服务名，小写，如 `github`、`deepseek`、`telegram` |
 | `key` | 否 | 要获取的字段 key，如 `token`、`password`、`account`。不传则返回该服务所有账号的全部字段 |
+| `confirm` | 否 | 是否确认读取敏感字段明文，布尔，默认 `false`。仅当 `key` 命中的字段是敏感字段（secure，如密码/Token/API Key）时需要；传 `true` 才返回明文，不传则返回打码值 |
 
 返回结果：
 - 找到凭据 → 返回 JSON 对象，包含账号列表或指定字段值
+- 敏感字段未确认（`key` 命中 secure 字段但没传 `confirm: true`）→ 返回 `requiresConfirm: true` 和打码值，提示需要显式确认
 - 服务不存在 → 返回提示信息，列出已有服务名
 - 文件不存在 → 进入首次使用引导流程
 
@@ -83,6 +85,21 @@ scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"service":"gith
 3. 存在 → `FileManager.readAsStringSync(credentialsPath)` 读 JSON
 4. 按 `services["服务名"]` 找账号列表
 5. 遍历 `fields` 数组，按 `key` 匹配需要的字段
+
+# 安全机制（敏感字段默认打码）
+
+本 skill 对凭据明文做了分层保护：
+
+1. **不指定 `key` 批量读取时**：secure 字段（密码/Token/API Key）一律返回 `*** (加密隐藏)`，只有 key/title；非敏感字段（账号、用户ID、备注）正常返回。额外生成的 `flatMap` 也**只包含非 secure 字段**。
+2. **指定 `key` 读取时**：
+   - 命中的是**非敏感字段**（如 `account`、`userId`、`custom`）→ 正常返回明文。
+   - 命中的是**敏感字段**（如 `password`、`token`）且**未传 `confirm: true`** → 返回打码值 + `requiresConfirm: true`，不泄露明文。
+   - 命中的是**敏感字段**且**显式传了 `confirm: true`** → 返回明文。
+
+**使用原则**：
+- 非敏感字段（账号/用户ID/备注）可以直接读，不需要 `confirm`。
+- 敏感字段（密码/Token/API Key）**只有用户明确要求使用时**（如“用我的 GitHub token 调 API”）才带 `confirm: true` 读取；用户只是询问、核对、展示时一律只读打码值。
+- 获取到敏感明文后，不要把它原样重复打印进对话或写入任何文件/记忆，仅在需要调用 API 时于命令行内直接使用。
 
 # 首次使用引导
 
