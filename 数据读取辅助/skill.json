@@ -1,4 +1,9 @@
 {
-  "icon": "key.fill",
-  "color": "systemYellow"
+  "color" : "systemYellow",
+  "icon" : "key.fill",
+  "remoteResource" : {
+    "autoUpdateInterval" : 21600,
+    "hash" : "3630ce1296de54d1a5c061fcab46a000",
+    "url" : "https:\/\/github.com\/vvvvvveng\/Scripting-skills\/tree\/main\/数据读取辅助"
+  }
 }
