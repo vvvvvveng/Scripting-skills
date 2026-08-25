@@ -27,6 +27,10 @@ const credentialsPath =
 ```json
 {
   "updatedAt": "2026-08-24T...",
+  "viewMode": "grouped",
+  "showGuide": true,
+  "autoBackupEnabled": false,
+  "autoBackupAt": "2026-08-25T...",
   "services": {
     "github": [
       {
@@ -47,8 +51,9 @@ const credentialsPath =
 ```
 
 - 服务名用小写（如 `github`、`deepseek`、`telegram`）
-- 字段 key：`account`（账号）、`password`（密码）、`userId`（用户ID）、`token`（Token/API Key）、`custom`（备注）
+- 字段 key：`account`（账号）、`password`（密码）、`userId`（用户ID）、`token`（Token/API Key）、`custom`（备注）；注意「账号」和「用户名」在数据里 key 都是 `account`
 - 一个服务下可以有多个账号
+- 其余顶层字段（`viewMode`/`showGuide`/`autoBackup*`）是界面与自动备份配置，与本 skill 读取无关，忽略即可
 
 # 调用步骤
 
@@ -88,6 +93,11 @@ scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"service":"gith
 3. **用户保存数据后**，`credentials.json` 会自动生成到上述路径
 4. **Agent 将路径记录到全局记忆**：确认文件存在后，调用 `file_tool` 将路径格式写入 `memory/memories/credentials-from-bee-password-manager.md`（如果已存在则跳过）
 
+# 安装与更新
+
+- 本 skill 从仓库 https://github.com/vvvvvveng/Scripting-skills 安装（`skill.json` 的 `remoteResource` 指向该仓库，Scripting 会按 `autoUpdateInterval` 自动检查更新）。
+- 也可以打开「🐝密码管理器」脚本，首页使用说明「六、Scripting 快捷调用」里有「一键安装『数据读取辅助』skill」按钮，点击即可安装/检查最新版。
+
 # 作者信息
 
 - 作者：WWWeng🐝
@@ -95,7 +105,14 @@ scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"service":"gith
 
 # 加密备份
 
-iCloud 目录下还有一个 `credentials.backup.enc` 加密备份，这是带密码保护的加密文件，需要用户在🐝密码管理器里输入应用密码恢复。Agent **无法直接解密**，不要尝试读取解密。
+iCloud 目录下还有一个 `credentials.backup.enc` 加密备份（路径 `FileManager.iCloudDocumentsDirectory + "/credentials.backup.enc"`），这是带密码保护的加密文件，需要用户在🐝密码管理器里输入应用密码恢复。
+
+🐝密码管理器现在支持两种备份：
+
+1. **手动备份**：设置页「备份到 iCloud（加密）」，输入备份密码后加密保存。
+2. **自动备份**：设置页开启「自动备份到 iCloud」后，每次打开🐝密码管理器都会自动用保存的备份密码加密备份（开关、密码、上次自动备份时间存在本地 `credentials.json` 的 `autoBackup*` 字段）。
+
+两种备份的产物都是同一个 `credentials.backup.enc`，使用 AES-256-GCM 加密，Agent **无法直接解密**，不要尝试读取解密；需要恢复时引导用户在🐝密码管理器里操作。
 
 # 注意事项
 
