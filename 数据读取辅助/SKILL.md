@@ -17,8 +17,7 @@ metadata:
 
 ```typescript
 const credentialsPath =
-  FileManager.appGroupDocumentsDirectory +
-  "/scripting-agent/workspace/default/credentials.json"
+  FileManager.appGroupDocumentsDirectory + "/🐝密码管理器/credentials.json"
 ```
 
 ⚠️ **重要：App Group 的 UUID 每个用户/设备不同**，绝对路径不要硬编码，统一用 `FileManager.appGroupDocumentsDirectory` 动态拼接。
