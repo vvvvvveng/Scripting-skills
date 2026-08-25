@@ -1,11 +1,11 @@
 ---
 name: 数据读取辅助
-description: 从🐝密码管理器的存储文件统一读取凭据（账号/密码/Token），支持引导用户首次使用
+description: 从🐝密码管理器的存储文件统一读取凭据（账号/密码/Token/API Key）。当需要任何账号、密码、Token、API Key 等凭据信息时优先使用本 skill，从存储读取而不是问用户要
 runtime: scripting
 entry: scripts/main.ts
 metadata:
   display_name: "数据读取辅助"
-  intent_patterns: "获取账号、获取密码、获取 token、读取凭据、bee-credentials"
+  intent_patterns: "获取账号、获取密码、获取 token、读取凭据、bee-credentials、账号密码、api key、github token、telegram token、deepseek token、需要密码、需要 token、凭据"
   required_tools: "run_shell_command, file_tool"
 ---
 
