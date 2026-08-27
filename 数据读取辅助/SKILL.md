@@ -50,7 +50,7 @@ const credentialsPath =
 }
 ```
 
-- 服务名用小写（如 `github`、`deepseek`、`telegram`）
+- 服务名建议用小写（如 `github`、`deepseek`、`telegram`）；查找时**大小写不敏感**，即使存储里是 `Github` 也能命中（注意 `data.services` 的 key 是添加时填写的原始服务名，可能带大写）
 - 字段 key：`account`（账号）、`password`（密码）、`userId`（用户ID）、`token`（Token/API Key）、`custom`（备注）；注意「账号」和「用户名」在数据里 key 都是 `account`
 - 一个服务下可以有多个账号
 - 其余顶层字段（`viewMode`/`showGuide`/`autoBackup*`）是界面与自动备份配置，与本 skill 读取无关，忽略即可
