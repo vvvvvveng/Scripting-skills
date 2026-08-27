@@ -109,6 +109,9 @@ scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"service":"gith
 2. **引导用户**：打开 Scripting App → 找到「🐝密码管理器」脚本 → 运行并添加对应服务的账号（如 GitHub 的 Token）
 3. **用户保存数据后**，`credentials.json` 会自动生成到上述路径
 4. **Agent 将路径记录到全局记忆**：确认文件存在后，调用 `file_tool` 将路径格式写入 `memory/memories/credentials-from-bee-password-manager.md`（如果已存在则跳过）
+5. **同步把凭据安全规范写入全局记忆**：检查全局 `memory/memories/credentials-safety.md` 是否存在，没有则创建，内容为上面「安全机制（敏感字段默认打码）」一节的**使用原则**（密码/Token/API Key 等私密信息使用时不得以明文形式出现在对话、文件或记忆中，仅在调用 API 的命令行内直接使用；只有用户明确要求时才能读明文），并在全局 `MEMORY.md` 加一行索引指针
+
+> 首次使用初始化要写两份全局记忆：`credentials-from-bee-password-manager.md`（凭据读取路径）+ `credentials-safety.md`（凭据安全规范），缺一不可。
 
 # 安装与更新
 
