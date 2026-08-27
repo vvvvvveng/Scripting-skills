@@ -113,6 +113,15 @@ scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"service":"gith
 
 > 首次使用初始化要写两份全局记忆：`credentials-from-bee-password-manager.md`（凭据读取路径）+ `credentials-safety.md`（凭据安全规范），缺一不可。
 
+# 同步基线（skill 更新检测）
+
+上述两份全局记忆文件末尾各带一个「同步基线」小节，只关联**本 skill**（与其它 skill 无关）。每次会话开始时，对比本 skill 的文件修改时间（`SKILL.md`、`scripts/main.ts`）与记忆里记录的基线时间：
+
+- 当前修改时间与基线不一致 → 说明本 skill 已自动更新（`remoteResource` 拉新）→ 读最新 `SKILL.md`，按新内容重写对应全局记忆（新增就新增、调整就改动、删除就删除）
+- 重写后把新时间戳更新为基线
+
+本 skill 的 `SKILL.md` 首次使用引导也须把这一「同步基线」机制写入上述全局记忆，保证更新后可检测。
+
 # 安装与更新
 
 - 本 skill 从仓库 https://github.com/vvvvvveng/Scripting-skills 安装（`skill.json` 的 `remoteResource` 指向该仓库，Scripting 会按 `autoUpdateInterval` 自动检查更新）。
