@@ -7,6 +7,7 @@ metadata:
   display_name: "脚本历史版本辅助"
   author: "WWWeng🐝"
   repository: "https://github.com/vvvvvveng/Scripting-skills"
+  last_updated: "2026-08-28 01:57:49"
   intent_patterns: "参考历史版本, 参考旧版, 从备份恢复, 找回功能, 恢复到旧版, ScriptBackups, 备份文件, 版本号, 参考xxx_1.0.1, 参考1.0.1版本"
   required_tools: "run_shell_command, file_tool"
 ---
