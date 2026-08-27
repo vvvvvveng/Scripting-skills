@@ -81,6 +81,15 @@ metadata:
 
 这样别的用户/环境首次使用时也能自动完成全局配置。已配置过就直接用，不重复写。
 
+# 同步基线（skill 更新检测）
+
+上述全局记忆文件 `scriptbackups-location.md` 末尾带一个「同步基线」小节，只关联**本 skill**（与其它 skill 无关）。每次会话开始时，对比本 skill 的 `SKILL.md` 修改时间与记忆里记录的基线时间：
+
+- 当前修改时间与基线不一致 → 说明本 skill 已自动更新（`remoteResource` 拉新）→ 读最新 `SKILL.md`，按新内容重写全局记忆（新增就新增、调整就改动、删除就删除）
+- 重写后把新时间戳更新为基线
+
+本 skill 的首次使用初始化也须把这一「同步基线」机制写入 `scriptbackups-location.md`，保证更新后可检测。
+
 # 工具脚本
 
 `scripts/backup_tool.py` 提供只读访问备份的能力，用 `run_shell_command` 调用（python3）：
