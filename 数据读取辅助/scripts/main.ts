@@ -102,8 +102,9 @@ function main() {
     return
   }
 
-  // 查找服务
-  const accounts = data.services[service]
+  // 查找服务（大小写不敏感：存储里服务名可能含大写，如 Github/Cloudflare/Gmail）
+  const serviceKey = Object.keys(data.services).find(k => k.toLowerCase() === service)
+  const accounts = serviceKey ? data.services[serviceKey] : undefined
   if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
     const availableServices = Object.keys(data.services)
     Script.exit({
