@@ -67,20 +67,19 @@ metadata:
 
 # 首次使用初始化（每个新环境/用户只做一次）
 
-首次在当前环境使用本 skill 时，先把必要信息写入**工作区记忆**（用 file_tool 操作，路径见 request_context 的 memory_workspace）：
+首次在当前环境使用本 skill 时，把必要信息写入**全局记忆**（用 file_tool 操作，路径见 request_context 的 memory_global）。写全局而非工作区，是为了任何 workspace 都能直接识别备份位置，无需每个工作区重复初始化：
 
-1. 检查 `memory_workspace` 的 `MEMORY.md` 是否已有 ScriptBackups 相关条目（如 `scriptbackups-location`）
-2. 没有则创建记忆文件 `memories/scriptbackups-location.md`，内容包含：
-   - ScriptBackups 备份目录的**实际绝对路径**（上面「备份目录」一节）
+1. 检查 `memory_global` 的 `MEMORY.md` 是否已有 ScriptBackups 相关条目（如 `scriptbackups-location`）；已有则直接用，不重复写
+2. 没有则创建全局记忆文件 `memories/scriptbackups-location.md`，内容包含：
+   - ScriptBackups 备份目录的**实际绝对路径**（上面「备份目录」一节；含 TMPDIR 推导方式，UUID 随设备变化）
    - 命名规则：`脚本名_版本号.scripting`；只读 `.scripting`，不读 `全部_*.zip`
+   - 访问方式：用本 skill 的 `backup_tool.py`，不要手动 find iCloud
    - 当前环境脚本目录 `scripts/` 的路径
-3. 在 `MEMORY.md` 索引里加一行指针
-4. 顺手确认备份目录里有哪些可用备份（跑一次 `list`），把「该用户环境里实际存在哪些脚本的备份」记入记忆，方便后续直接回答「有没有 1.0.1 的备份」
-5. **同步写一条全局记忆提示**（用 file_tool 操作，路径见 request_context 的 memory_global）：检查全局 `MEMORY.md` 是否已有 `history-restore-skill` 条目，没有则创建 `memories/history-restore-skill.md`，内容**只写触发提示、不写任何具体路径/UUID**（隐私安全），并加一行索引指针：
-   - 用户提到「参考历史版本 / 从旧版备份恢复 / 参考某脚本某版本功能」时，先读「脚本历史版本辅助」skill（`scripting-skills/脚本历史版本辅助/`），按其流程操作
-   - 具体路径信息在工作区记忆 `scriptbackups-location` 中，动态探测，不硬编码
+3. 在全局 `MEMORY.md` 索引里加一行指针
+4. 顺手确认备份目录里有哪些可用备份（跑一次 `list`），把「该用户环境里实际存在哪些脚本的备份」记入同一记忆文件，方便后续直接回答「有没有 1.0.1 的备份」
+5. 若某工作区需要工作区级记忆（如该 workspace 特别关注某脚本的历史），也可在工作区记忆写简版并指向全局，避免重复维护
 
-这样别的用户/环境首次使用时也能自动完成配置。已配置过就直接用，不重复写。
+这样别的用户/环境首次使用时也能自动完成全局配置。已配置过就直接用，不重复写。
 
 # 工具脚本
 
