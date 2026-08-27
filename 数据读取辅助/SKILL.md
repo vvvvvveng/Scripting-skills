@@ -5,6 +5,7 @@ runtime: scripting
 entry: scripts/main.ts
 metadata:
   display_name: "数据读取辅助"
+  last_updated: "2026-08-28 01:49:38"
   intent_patterns: "获取账号、获取密码、获取 token、读取凭据、bee-credentials、账号密码、api key、github token、telegram token、deepseek token、需要密码、需要 token、凭据"
   required_tools: "run_shell_command, file_tool"
 ---
