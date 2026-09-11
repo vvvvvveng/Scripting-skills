@@ -5,8 +5,8 @@ runtime: scripting
 entry: scripts/main.ts
 metadata:
   display_name: "数据读取辅助"
-  last_updated: "2026-08-28 01:49:38"
-  intent_patterns: "获取账号、获取密码、获取 token、读取凭据、bee-credentials、账号密码、api key、github token、telegram token、deepseek token、需要密码、需要 token、凭据"
+  last_updated: "2026-09-12 01:32:00"
+  intent_patterns: "获取账号、获取密码、获取 token、读取凭据、bee-credentials、账号密码、api key、github token、telegram token、deepseek token、需要密码、需要 token、凭据、项目码、按项目码读取"
   required_tools: "run_shell_command, file_tool"
 ---
 
@@ -36,6 +36,7 @@ const credentialsPath =
     "github": [
       {
         "id": "acc_xxx",
+        "code": "12345",
         "fields": [
           { "key": "account",  "title": "账号",   "value": "用户名" },
           { "key": "password", "title": "密码",   "value": "xxx", "secure": true },
@@ -54,7 +55,20 @@ const credentialsPath =
 - 服务名建议用小写（如 `github`、`deepseek`、`telegram`）；查找时**大小写不敏感**，即使存储里是 `Github` 也能命中（注意 `data.services` 的 key 是添加时填写的原始服务名，可能带大写）
 - 字段 key：`account`（账号）、`password`（密码）、`userId`（用户ID）、`token`（Token/API Key）、`custom`（备注）；注意「账号」和「用户名」在数据里 key 都是 `account`
 - 一个服务下可以有多个账号
+- `code`：**项目码**，5 位数字、**全库唯一**（首位不为 0，范围 10000–99999）。由🐝密码管理器在新建/复制/导入/恢复时自动生成，**生成后永不改变**；在账号详情页服务名尾部右对齐显示（点击可复制），首页搜索框也能直接搜到。**用于精确定位到某一个账号**
 - 其余顶层字段（`viewMode`/`showGuide`/`autoBackup*`）是界面与自动备份配置，与本 skill 读取无关，忽略即可
+
+# 定位优先级（重要）
+
+调用本 skill 定位账号时，一律按以下优先级：
+
+1. **优先用项目码**（参数 `projectCode`，5 位数字，全库唯一）——**能拿到项目码就一定用它**，这是唯一能精确定位到“某个具体账号”的方式。
+2. **没有项目码时**，再考虑用 `service`（配合 `key`）等其它方式定位。
+3. **两者都传且指向不同账号时，以项目码为准**：脚本会返回项目码命中的那个账号，并回传 `serviceConflict: true` 与 `note` 说明（不报错、不取错项）。
+
+为什么：同一服务下可以有多个账号，只按服务名可能拿错账号；项目码是每个账号稳定且唯一的标识。
+
+不确定项目码时：先按服务读取（不传 `key`），返回的每个账号都会带 `code` 字段，再用它精确调用。
 
 # 调用步骤
 
@@ -69,14 +83,26 @@ scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"service":"gith
 参数说明：
 | 参数 | 必填 | 说明 |
 |------|------|------|
-| `service` | 是 | 服务名，小写，如 `github`、`deepseek`、`telegram` |
-| `key` | 否 | 要获取的字段 key，如 `token`、`password`、`account`。不传则返回该服务所有账号的全部字段 |
+| `projectCode` | **优先** | 项目码，5 位数字（如 `12345`）。全库唯一，**优先用它定位账号**；传了它就是全局查找，不用再传 `service` |
+| `service` | 否* | 服务名，小写，如 `github`、`deepseek`、`telegram`；*未传 `projectCode` 时必填 |
+| `key` | 否 | 要获取的字段 key，如 `token`、`password`、`account`。不传则返回该账号/该服务所有账号的全部字段 |
 | `confirm` | 否 | 是否确认读取敏感字段明文，布尔，默认 `false`。仅当 `key` 命中的字段是敏感字段（secure，如密码/Token/API Key）时需要；传 `true` 才返回明文，不传则返回打码值 |
 
+推荐用法（有项目码就用项目码）：
+
+```
+# 按项目码精确读取某个账号的 Token（敏感字段需 confirm: true 才返回明文）
+scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"projectCode":"12345","key":"token","confirm":true}'
+
+# 没有项目码时，按服务名读取
+scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"service":"github","key":"token"}'
+```
+
 返回结果：
-- 找到凭据 → 返回 JSON 对象，包含账号列表或指定字段值
+- 找到凭据 → 返回 JSON 对象，包含账号列表或指定字段值（按项目码读取时含 `service`（实际所属服务）与 `code`；若同时传了冲突的 `service`，额外返回 `serviceConflict: true` 与 `note`）
 - 敏感字段未确认（`key` 命中 secure 字段但没传 `confirm: true`）→ 返回 `requiresConfirm: true` 和打码值，提示需要显式确认
-- 服务不存在 → 返回提示信息，列出已有服务名
+- 服务不存在 / 项目码查不到 → 返回提示信息（前者列出已有服务名）
+- 参数不合法 → 返回错误（如项目码不是 5 位数字）
 - 文件不存在 → 进入首次使用引导流程
 
 ## 2. 手动逐步骤读取（不执行脚本，纯 Agent 操作）
@@ -84,8 +110,9 @@ scripting-ts run <skill_dir>/scripts/main.ts --queryparameters '{"service":"gith
 1. 用 `FileManager.existsSync(credentialsPath)` 判断文件是否存在
 2. 不存在 → 走下面的「首次使用引导」
 3. 存在 → `FileManager.readAsStringSync(credentialsPath)` 读 JSON
-4. 按 `services["服务名"]` 找账号列表
-5. 遍历 `fields` 数组，按 `key` 匹配需要的字段
+4. **有项目码**：遍历所有 `services` 下每个账号，找 `account.code` 等于目标项目码的那一个（全库唯一，命中的就是目标账号），跳过第 5 步
+5. 没有项目码时：按 `services["服务名"]`（大小写不敏感）找账号列表
+6. 遍历 `fields` 数组，按 `key` 匹配需要的字段
 
 # 安全机制（敏感字段默认打码）
 
@@ -148,4 +175,5 @@ iCloud 目录下还有一个 `credentials.backup.enc` 加密备份（路径 `Fil
 
 - 永远不要硬编码 App Group 的 UUID 路径到脚本或文档中
 - 编辑脚本时不要修改 🐝密码管理器 的存储路径或数据结构
-- 如果用户说"凭据不对"，检查文件是否存在、服务名是否匹配、字段 key 是否对应
+- 定位账号时**优先用项目码 `projectCode`**；没有项目码再用 `service`/`key`；两者冲突时以项目码为准
+- 如果用户说"凭据不对"，检查文件是否存在、项目码是否敲对（5 位数字）、服务名是否匹配、字段 key 是否对应
